@@ -1,0 +1,201 @@
+
+var _createClass = function () { 
+    function defineProperties(target, props) { 
+        for (var i = 0; i < props.length; i++) { 
+            var descriptor = props[i];
+            descriptor.enumerable = descriptor.enumerable || false;
+            descriptor.configurable = true;
+            if ("value" in descriptor) descriptor.writable = true;
+            Object.defineProperty(target, descriptor.key, descriptor);
+         } 
+    } 
+    return function (Constructor, protoProps, staticProps) { 
+        if (protoProps) defineProperties(Constructor.prototype, protoProps);
+         if (staticProps) defineProperties(Constructor, staticProps);
+          return Constructor; }; 
+    
+}();
+
+function _classCallCheck(instance, Constructor) { 
+    if (!(instance instanceof Constructor)) { 
+        throw new TypeError("Cannot call a class as a function"); 
+    } 
+}
+
+var particles = [];
+var microparticles = [];
+
+var c1 = createCanvas({ width: $(window).width(), height: $(window).height() });
+
+var tela = c1.canvas;
+var canvas = c1.context;
+
+// $("body").append(tela);
+$("body").append(c1.canvas);
+
+var Particle = function () {
+    function Particle(canvas) {
+        _classCallCheck(this, Particle);
+
+        this.random = Math.random();
+        this.random1 = Math.random();
+        this.random2 = Math.random();
+        this.progress = 0;
+        this.canvas = canvas;
+        this.life = 1000 + Math.random() * 3000;
+
+        this.x = $(window).width() / 2 + (Math.random() * 20 - Math.random() * 20);
+        this.y = $(window).height();
+        this.s = 2 + Math.random();
+        this.w = $(window).width();
+        this.h = $(window).height();
+        this.direction = this.random > .5 ? -1 : 1;
+        this.radius = 1 + 3 * this.random;
+        this.color = "#ff417d";
+
+        this.ID = setInterval(function () {
+            microparticles.push(new microParticle(c1.context, {
+                x: this.x,
+                y: this.y
+            }));
+        }.bind(this), this.random * 20);
+
+        setTimeout(function () {
+            clearInterval(this.ID);
+        }.bind(this), this.life);
+    }
+
+    _createClass(Particle, [{
+        key: "render",
+        value: function render() {
+            this.canvas.beginPath();
+            this.canvas.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+            // this.canvas.lineWidth = 2;
+            this.canvas.shadowOffsetX = 0;
+            this.canvas.shadowOffsetY = 0;
+            // this.canvas.shadowBlur = 6;
+            this.canvas.shadowColor = "#000000";
+            this.canvas.fillStyle = this.color;
+            this.canvas.fill();
+            this.canvas.closePath();
+        }
+    }, {
+        key: "move",
+        value: function move() {
+            this.x -= this.direction * Math.sin(this.progress / (this.random1 * 430)) * this.s;
+            this.y -= Math.cos(this.progress / this.h) * this.s;
+
+            if (this.x < 0 || this.x > this.w - this.radius) {
+                clearInterval(this.ID);
+                return false;
+            }
+
+            if (this.y < 0) {
+                clearInterval(this.ID);
+                return false;
+            }
+            this.render();
+            this.progress++;
+            return true;
+        }
+    }]);
+
+    return Particle;
+}();
+
+var microParticle = function () {
+    function microParticle(canvas, options) {
+        _classCallCheck(this, microParticle);
+
+        this.random = Math.random();
+        this.random1 = Math.random();
+        this.random2 = Math.random();
+        this.progress = 0;
+        this.canvas = canvas;
+
+        this.x = options.x;
+        this.y = options.y;
+        this.s = 2 + Math.random() * 3;
+        this.w = $(window).width();
+        this.h = $(window).height();
+        this.radius = 1 + this.random * 0.5;
+        this.color = "#4EFCFE"; //this.random > .5 ? "#a9722c" : "#FFFED7"
+    }
+
+    _createClass(microParticle, [{
+        key: "render",
+        value: function render() {
+            this.canvas.beginPath();
+            this.canvas.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+            this.canvas.lineWidth = 2;
+            this.canvas.fillStyle = this.color;
+            this.canvas.fill();
+            this.canvas.closePath();
+        }
+    }, {
+        key: "move",
+        value: function move() {
+            this.x -= Math.sin(this.progress / (100 / (this.random1 - this.random2 * 10))) * this.s;
+            this.y += Math.cos(this.progress / this.h) * this.s;
+
+            if (this.x < 0 || this.x > this.w - this.radius) {
+                return false;
+            }
+
+            if (this.y > this.h) {
+                return false;
+            }
+            this.render();
+            this.progress++;
+            return true;
+        }
+    }]);
+
+    return microParticle;
+}();
+
+var random_life = 1000;
+
+setInterval(function () {
+    particles.push(new Particle(canvas));
+    random_life = 2000 * Math.random();
+}.bind(this), random_life);
+
+function clear() {
+    var grd = canvas.createRadialGradient(tela.width / 2, tela.height / 2, 0, tela.width / 2, tela.height / 2, tela.width);
+    grd.addColorStop(0, "rgba(82,42,114,1)");
+    grd.addColorStop(1, "rgba(26,14,4,0)");
+    // Fill with gradient
+    canvas.globalAlpha = 0.16;
+    canvas.fillStyle = grd;
+    canvas.fillRect(0, 0, tela.width, tela.height);
+}
+
+function blur(ctx, canvas, amt) {
+    // ctx.filter = `blur(${amt}px)`
+    // ctx.drawImage(canvas, 0, 0)
+    // ctx.filter = 'none'
+}
+
+function update() {
+    clear();
+    particles = particles.filter(function (p) {
+        return p.move();
+    });
+    microparticles = microparticles.filter(function (mp) {
+        return mp.move();
+    });
+    requestAnimationFrame(update.bind(this));
+}
+
+function createCanvas(properties) {
+    var canvas = document.createElement('canvas');
+    canvas.width = properties.width;
+    canvas.height = properties.height;
+    var context = canvas.getContext('2d');
+    return {
+        canvas: canvas,
+        context: context
+    };
+}
+update();
